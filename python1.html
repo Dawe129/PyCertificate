@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python Certification Quiz</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #000; color: #fff; min-height: 100vh; }
+  .container { max-width: 900px; margin: 0 auto; padding: 20px; padding-bottom: 80px; }
+
+  /* MENU */
+  .menu { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; }
+  .menu h1 { font-size: 2.6em; color: #e94560; margin-bottom: 10px; }
+  .menu p { color: #aaa; margin-bottom: 40px; font-size: 1.1em; }
+  .menu-grid { display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 400px; }
+  .menu-card { background: #111; border: 2px solid #333; border-radius: 14px; padding: 28px 24px; text-align: center; cursor: pointer; transition: all 0.25s; text-decoration: none; color: #fff; }
+  .menu-card:hover { border-color: #e94560; transform: translateY(-2px); box-shadow: 0 6px 25px rgba(233,69,96,0.25); }
+  .menu-card.disabled { opacity: 0.4; cursor: default; pointer-events: none; }
+  .menu-card h2 { font-size: 1.4em; margin-bottom: 6px; color: #fff; }
+  .menu-card span { font-size: 0.9em; color: #aaa; }
+  .menu-actions { margin-top: 12px; display: flex; justify-content: center; }
+  .menu-btn { border: 1px solid #555; background: #1a1a1a; color: #ddd; border-radius: 8px; padding: 7px 12px; font-size: 0.8em; cursor: pointer; }
+  .menu-btn:hover { border-color: #e94560; color: #fff; }
+
+  /* QUIZ VIEW */
+  .quiz-view { display: none; }
+  .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+  .top-bar h2 { color: #e94560; font-size: 1.3em; }
+  .score-info { font-size: 0.95em; color: #ccc; }
+  .score-info .ok { color: #4caf50; font-weight: 700; }
+  .score-info .fail { color: #e94560; font-weight: 700; }
+  .btn { border: none; border-radius: 8px; padding: 10px 20px; font-size: 0.9em; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+  .btn-back { background: #222; color: #fff; }
+  .btn-back:hover { background: #444; }
+  .btn-submit { background: #e94560; color: #fff; }
+  .btn-submit:hover { background: #c73650; }
+  .btn-submit:disabled { opacity: 0.4; cursor: default; }
+
+  /* QUESTION */
+  .question-block { background: #111; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); min-height: 300px; }
+  .q-header { font-size: 0.85em; color: #e94560; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+  .q-text { font-size: 1.05em; margin-bottom: 6px; line-height: 1.5; }
+  .q-code { background: #1a1a1a; border-radius: 8px; padding: 14px; margin: 10px 0 14px; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.92em; white-space: pre-wrap; line-height: 1.5; color: #e0e0e0; border-left: 4px solid #e94560; }
+  .q-note { font-size: 0.9em; color: #bbb; margin-bottom: 10px; font-style: italic; }
+  .answers { display: flex; flex-direction: column; gap: 8px; }
+  .answer-btn { background: #1a1a1a; border: 2px solid #333; border-radius: 8px; padding: 12px 16px; text-align: left; cursor: pointer; font-size: 0.95em; color: #fff; transition: all 0.2s; font-family: inherit; line-height: 1.4; }
+  .answer-btn:hover:not(.disabled) { border-color: #e94560; background: #222; }
+  .answer-btn.disabled { cursor: default; }
+  .answer-btn.correct { background: #1b5e20; border-color: #4caf50; color: #fff; }
+  .answer-btn.wrong { background: #b71c1c; border-color: #e53935; color: #fff; }
+  .answer-btn.show-correct { border-color: #4caf50; box-shadow: 0 0 8px rgba(76,175,80,0.5); }
+  .answer-btn.multi-selected { border-color: #ffc107; background: #222; }
+  .multi-note { font-size: 0.85em; color: #ffc107; margin-bottom: 8px; }
+  .answer-reveal-wrap { margin-bottom: 12px; }
+  .answer-note-box { margin: 10px 0 12px; padding: 10px 12px; border-radius: 8px; background: #1a1a1a; border-left: 4px solid #4caf50; color: #ddd; font-size: 0.92em; line-height: 1.45; }
+  .result-msg { margin-top: 12px; font-weight: bold; font-size: 1em; }
+  .result-msg.ok { color: #4caf50; }
+  .result-msg.fail { color: #e94560; }
+
+  .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #111; border-top: 1px solid #333; padding: 12px 20px; display: flex; align-items: center; gap: 12px; z-index: 100; }
+  .nav-dots { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; flex: 1; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; background: #333; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
+  .dot:hover { border-color: #e94560; }
+  .dot.current { border-color: #e94560; background: #e94560; }
+  .dot.answered-ok { background: #4caf50; }
+  .dot.answered-fail { background: #e53935; }
+
+  /* RESULTS */
+  .results-view { display: none; text-align: center; padding-top: 60px; }
+  .results-view h2 { font-size: 2em; color: #e94560; margin-bottom: 20px; }
+  .results-view .big-score { font-size: 3em; font-weight: 700; margin: 20px 0; }
+  .results-view .big-score.pass { color: #4caf50; }
+  .results-view .big-score.nopass { color: #e94560; }
+  .results-view p { color: #ccc; font-size: 1.1em; margin-bottom: 30px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- MENU -->
+  <div class="menu" id="menuView">
+    <h1>🐍 Python Certification Quiz</h1>
+    <p>Vyber si test</p>
+    <div class="menu-grid">
+      <div class="menu-card" onclick="startQuiz('python1')">
+        <h2>Python 1</h2>
+        <span>35 otázek</span>
+        <div class="menu-actions">
+          <button class="menu-btn" onclick="event.stopPropagation(); startQuiz('python1', true)">Spustit náhodně</button>
+        </div>
+      </div>
+      <div class="menu-card" onclick="startQuiz('python2')">
+        <h2>Python 2</h2>
+        <span>39 otázek</span>
+        <div class="menu-actions">
+          <button class="menu-btn" onclick="event.stopPropagation(); startQuiz('python2', true)">Spustit náhodně</button>
+        </div>
+      </div>
+      <div class="menu-card disabled">
+        <h2>Python 3</h2>
+        <span>Připravujeme...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz-view" id="quizView">
+    <div class="top-bar">
+      <button class="btn btn-back" onclick="backToMenu()">← Menu</button>
+      <h2 id="quizTitle"></h2>
+      <div class="score-info">
+        ✅ <span class="ok" id="correctCount">0</span> &nbsp;
+        ❌ <span class="fail" id="wrongCount">0</span> &nbsp;
+        📋 <span id="remainCount">35</span>
+      </div>
+    </div>
+    <div id="questionArea"></div>
+    <div class="nav-bar" id="navBar">
+      <button class="btn btn-back" onclick="backToMenu()" style="white-space:nowrap;">← Menu</button>
+      <div class="nav-dots" id="navDots"></div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results-view" id="resultsView">
+    <h2>Výsledky</h2>
+    <div class="big-score" id="finalScore"></div>
+    <p id="finalMsg"></p>
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+      <button class="btn btn-submit" id="restartBtn" style="font-size:1.1em;padding:14px 30px;">🔄 Nový test</button>
+      <button class="btn btn-back" onclick="backToMenu()" style="font-size:1.1em;padding:14px 30px;">← Zpět na menu</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const quizData = {
+  python1: {
+    title: "Python 1",
+    questions: [
+  {
+    q: "Consider the following Python code snippet. What will the contents of my_numbers be after execution?",
+    code: "my_numbers = [10, 20, 30, 40, 50]\n\nfor i in range(4):\n    my_numbers.insert(i, my_numbers[-1])\n\nprint(my_numbers)",
+    answers: ["A) [50, 10, 50, 20, 50, 30, 50, 40]","B) [10, 50, 20, 30, 40, 50, 50, 50]","C) [10, 20, 30, 40, 50, 50, 50, 50]","D) [10, 20, 30, 50, 50, 50, 50, 40]"],
+    correct: [0], multi: false
+  },
+  {
+    q: "In the context of a function call in Python, what determines the meaning of a positional argument?",
+    answers: ["A) Its position within the argument list","B) Its value","C) The argument's name specified along with its value","D) Its connection with existing variables"],
+    correct: [0], multi: false
+  },
+  {
+    q: "Analyze the following Python code snippet:",
+    code: "alpha = [4, 8, 15, 16, 23, 42]\nbeta = alpha[:]\nbeta[2] = 99",
+    note: "Which of the following statements are true? (Select two answers)",
+    answers: ["A) alpha and beta are two names for the same list; thus, both lists now include the number 99 at the third position.","B) alpha and beta are separate lists; the alpha list remains unchanged after the modification.","C) The beta list is shorter than the alpha list because an element has been modified.","D) The alpha list is of the same length as the beta list, but their contents are not identical."],
+    correct: [1, 3], multi: true
+  },
+  {
+    q: "An operator able to check whether two values are not equal is coded as:",
+    answers: ["A) <>","B) !=","C) not ==","D) =/="],
+    correct: [1], multi: false
+  },
+  {
+    q: "Given the Python code segment below, what will be the output?",
+    code: "def compute_square(x):\n    return x * x\n\ndef compute_quad(x):\n    return compute_square(x) * compute_square(None)\n\nprint(compute_quad(4))",
+    answers: ["A) The code will output 256.","B) The code will output 16.","C) The code will cause a runtime error.","D) The code will output 64."],
+    correct: [2], multi: false
+  },
+  {
+    q: "The result of the following division:",
+    code: "1 // 2",
+    answers: ["A) is equal to 0.0","B) cannot be predicted","C) is equal to 0","D) is equal to 0.5"],
+    correct: [2], multi: false
+  },
+  {
+    q: "Consider the Python function defined below. What is the result of executing this code?",
+    code: "def raise_power(base, exponent):\n    return base ** exponent\n\nprint(raise_power(exponent=3, 2))",
+    answers: ["A) The code will output 8.","B) The code is erroneous and will not execute.","C) The code will output None.","D) The code will output 9."],
+    correct: [1], multi: false
+  },
+  {
+    q: "What value will be assigned to the x variable?",
+    code: "z = 0\ny = 10\nx = y < z and z > y or y < z and z < y",
+    answers: ["A) 1","B) True","C) 0","D) False"],
+    correct: [3], multi: false
+  },
+  {
+    q: "Review the following identifiers and select the ones that are reserved keywords in Python. (Select two answers)",
+    answers: ["A) class","B) true","C) continue","D) function"],
+    correct: [0, 2], multi: true
+  },
+  {
+    q: "What is the expected output of the following Python code?",
+    code: "my_values = [3 * i for i in range(5)]\n\ndef modify_list(values):\n    del values[values[2] // 3]\n    return values\n\nprint(modify_list(my_values))",
+    answers: ["A) [0, 3, 9, 12]","B) [0, 6, 9, 12]","C) [3, 6, 9, 12]","D) [0, 3, 6, 12]"],
+    correct: [0], multi: false
+  },
+  {
+    q: "What is the output of the following piece of code?",
+    code: "x = 1\ny = 2\nx, y, z = x, x, y\nz, y, z = x, y, z\n\nprint(x, y, z)",
+    answers: ["A) 1 2 1","B) 1 1 2","C) 1 2 2","D) 2 1 2"],
+    correct: [1], multi: false
+  },
+  {
+    q: "What will be the output of the following snippet?",
+    code: "a = 1\nb = 0\na = a ^ b\nb = a ^ b\na = a ^ b\n\nprint(a, b)",
+    answers: ["A) 0 0","B) 0 1","C) 1 0","D) 1 1"],
+    correct: [1], multi: false
+  },
+  {
+    q: "What is the output of the following Python code snippet?",
+    code: "def custom_function(value):\n    if value % 3 == 0:\n        return 1\n    else:\n        return 2\n\nprint(custom_function(custom_function(4)))",
+    answers: ["A) 1","B) 2","C) 3","D) 4"],
+    correct: [1], multi: false
+  },
+  {
+    q: "Consider the following Python code snippet and determine which statement is correct:",
+    code: "inventory = ['apple', 'banana', 'cherry']\nbackup_inventory = inventory\ndel backup_inventory[:]",
+    answers: ["A) inventory contains more items than backup_inventory.","B) backup_inventory contains more items than inventory.","C) Both inventory and backup_inventory contain the same number of items.","D) The code will result in a runtime error."],
+    correct: [2], multi: false
+  },
+  {
+    q: "Consider the following Python code, where only integer inputs are allowed. Which condition will ensure the code runs without a runtime error?",
+    code: "first_integer = int(input(\"Enter an integer: \"))\nsecond_integer = int(input(\"Enter another integer: \"))\nfirst_integer = first_integer % second_integer\nfirst_integer = first_integer % second_integer\nsecond_integer = second_integer % first_integer\nprint(second_integer)",
+    answers: ["A) The initial value of first_integer cannot be a multiple of second_integer.","B) second_integer must be larger than first_integer.","C) first_integer must be initialized to zero.","D) second_integer must be initialized to zero."],
+    correct: [0], multi: false
+  },
+  {
+    q: "Assuming the user enters 8 on the first line and 5 on the second line, what is the output?",
+    code: "first_input = input(\"Enter first number: \")\nsecond_input = input(\"Enter second number: \")\nprint(second_input + first_input)",
+    answers: ["A) 85","B) 13","C) 5","D) 58"],
+    correct: [3], multi: false
+  },
+  {
+    q: "What is the output of the following piece of code?",
+    code: "print(\"a\", \"b\", \"c\", sep=\"sep\")",
+    answers: ["A) asep bsep csep","B) a b c","C) abc","D) asepbsepc"],
+    correct: [3], multi: false
+  },
+  {
+    q: "What is the output of the following piece of code?",
+    code: "x = 1 // 5 + 1 / 5\nprint(x)",
+    answers: ["A) 0","B) 0.5","C) 0.4","D) 0.2"],
+    correct: [3], multi: false
+  },
+  {
+    q: "What is the result of trying to execute the following code if sample_tuple is a tuple with at least two elements?",
+    code: "sample_tuple[0] = 5\nprint(sample_tuple)",
+    answers: ["A) A TypeError will be raised because elements of a tuple cannot be reassigned.","B) The code will execute successfully, assigning the value 5 to the first element.","C) The code will only execute if all elements in sample_tuple are integers.","D) The code will run without error only if sample_tuple contains more than two elements."],
+    correct: [0], multi: false
+  },
+  {
+    q: "What is the output if the user enters 2 and 4 respectively?",
+    code: "x = float(input())\ny = float(input())\nprint(y ** (1 / x))",
+    answers: ["A) 1.0","B) 0.0","C) 2.0","D) 4.2"],
+    correct: [2], multi: false
+  },
+  {
+    q: "What is the expected output of the following code snippet?",
+    code: "dictionary = {'alpha': 'beta', 'gamma': 'alpha', 'beta': 'gamma'}\nvalue = dictionary['gamma']\n\nfor key in range(len(dictionary)):\n    value = dictionary[value]\n\nprint(value)",
+    answers: ["A) ('alpha', 'beta', 'gamma')","B) alpha","C) gamma","D) beta"],
+    correct: [1], multi: false
+  },
+  {
+    q: "How many elements are in the values list?",
+    code: "values = [i for i in range(-1, -3, -1)]",
+    answers: ["A) One","B) Three","C) Two","D) Zero"],
+    correct: [2], multi: false
+  },
+  {
+    q: "Which of the following function calls correctly invoke the function? (Select two answers)",
+    code: "def custom_function(x, y, z=0):\n    # Body of the function.",
+    answers: ["A) custom_function(y=2, x=1)","B) custom_function(x=3)","C) custom_function(4, 5, 6)","D) custom_function()"],
+    correct: [0, 2], multi: true
+  },
+  {
+    q: "What is the output of the following snippet?",
+    code: "def fun(x, y):\n    if x == y:\n        return x\n    else:\n        return fun(x, y-1)\n\nprint(fun(0, 3))",
+    answers: ["A) 1","B) the snippet will cause a runtime error","C) 2","D) 0"],
+    correct: [3], multi: false
+  },
+  {
+    q: "How many stars (*) will the following snippet send to the console?",
+    code: "i = 0\nwhile i < i + 2:\n    i += 1\n    print(\"*\")\nelse:\n    print(\"*\")",
+    answers: ["A) one","B) two","C) the snippet will enter an infinite loop, printing one star per line","D) zero"],
+    correct: [2], multi: false
+  },
+  {
+    q: "What is the output of the following Python code snippet?",
+    code: "my_tuple = (10, 20, 30, 40, 50)\nmy_tuple = my_tuple[-3::-1]\nmy_tuple = my_tuple[-1]\nprint(my_tuple)",
+    answers: ["A) 30","B) 20","C) 40","D) 50"],
+    correct: [3], multi: false
+  },
+  {
+    q: "Which code snippet correctly prints all the values in the dictionary?",
+    code: "my_dict = {\"apple\": 1, \"banana\": 2, \"cherry\": 3}",
+    answers: ["A) for value in my_dict.values():\\n    print(value)","B) for key in my_dict:\\n    print(value)","C) for item in my_dict:\\n    print(item)","D) for val in my_dict.vals():\\n    print(val)"],
+    correct: [0], multi: false
+  },
+  {
+    q: "What is the output of the following snippet?",
+    code: "dct = {}\ndct['1'] = (1, 2)\ndct['2'] = (2, 1)\n\nfor x in dct.keys():\n    print(dct[x][1], end=\"\")",
+    answers: ["A) 21","B) (2,1)","C) (1,2)","D) 12"],
+    correct: [0], multi: false
+  },
+  {
+    q: "What is the output of the following snippet?",
+    code: "def fun(inp=2, out=3):\n    return inp * out\n\nprint(fun(out=2))",
+    answers: ["A) 6","B) 4","C) the snippet is erroneous and will cause SyntaxError","D) 2"],
+    correct: [1], multi: false
+  },
+  {
+    q: "What is the value of count printed by the following code?",
+    code: "matrix = [[x for x in range(3)] for y in range(3)]\n\ncount = 0\nfor row in matrix:\n    for element in row:\n        if element % 2 != 0:\n            count += 1\n\nprint(count)",
+    answers: ["A) Zero","B) One","C) Two","D) Three"],
+    correct: [3], multi: false
+  },
+  {
+    q: "What is the output of the following code if the user enters a 0?",
+    code: "try:\n    value = input(\"Enter a value: \")\n    print(int(value)/len(value))\nexcept ValueError:\n    print(\"Bad input...\")\nexcept ZeroDivisionError:\n    print(\"Very bad input...\")\nexcept TypeError:\n    print(\"Very very bad input...\")\nexcept:\n    print(\"Booo!\")",
+    answers: ["A) Booo!","B) 1.0","C) 0.0","D) Very very bad input...","E) Bad input...","F) Very bad input..."],
+    correct: [2], multi: false
+  },
+  {
+    q: "What is the expected behavior of the following Python program?",
+    code: "try:\n    print(10 / 0)\n    break\nexcept ZeroDivisionError:\n    print(\"Zero division error occurred...\")\nexcept (ValueError, TypeError):\n    print(\"Value or type error occurred...\")\nexcept:\n    print(\"Unknown error occurred...\")",
+    answers: ["A) The program will cause a SyntaxError exception.","B) ZeroDivisionError → \"Zero division error occurred...\"","C) ValueError or TypeError → \"Value or type error occurred...\"","D) \"Unknown error occurred...\""],
+    correct: [0], multi: false
+  },
+  {
+    q: "What is the expected behavior of the following program?",
+    code: "foo = (1, 2, 3)\nfoo.index(0)",
+    answers: ["A) The program will cause an AttributeError exception.","B) The program will cause a ValueError exception.","C) The program will cause a TypeError exception.","D) The program will cause a SyntaxError exception.","E) The program will output 1 to the screen."],
+    correct: [1], multi: false
+  },
+  {
+    q: "Which snippet shows the correct way of handling multiple exceptions in a single except clause?",
+    code: "# A:\nexcept (TypeError, ValueError, ZeroDivisionError):\n    # Some code.\n\n# B:\nexcept TypeError, ValueError, ZeroDivisionError:\n    # Some code.\n\n# C:\nexcept: (TypeError, ValueError, ZeroDivisionError)\n    # Some code.\n\n# D:\nexcept: TypeError, ValueError, ZeroDivisionError\n    # Some code.\n\n# E:\nexcept (TypeError, ValueError, ZeroDivisionError)\n    # Some code.\n\n# F:\nexcept TypeError, ValueError, ZeroDivisionError\n    # Some code.",
+    answers: ["A) A only","B) A and B","C) B and C","D) D and E","E) F","F) A, C, and D","G) A and F"],
+    correct: [0], multi: false
+  },
+  {
+    q: "What will happen when you attempt to run the following code?",
+    code: "print(3 + \"5\")",
+    answers: ["A) The code will raise the AttributeError exception.","B) The code will print \"8\" to the console.","C) The code will raise the ValueError exception.","D) The code will raise the SyntaxError exception.","E) The code will raise the TypeError exception."],
+    correct: [4], multi: false
+  }
+]
+  },
+  python2: {
+    title: "Python 2",
+    questions: [
+      {
+        q: "Question 2\nGiven the Python code snippet below:\nimport random\nprint(len(dir(random)))\nWhat will be the output of this code?",
+        code: "import random\nprint(len(dir(random)))",
+        answers: [
+          "A) A list of attributes belonging to the random module.",
+          "B) The number of attributes in the random module.",
+          "C) A TypeError because dir cannot be used with modules.",
+          "D) The documentation string of the random module."
+        ],
+        note: "Správná odpověď: The number of attributes in the random module.",
+        correct: [1], multi: false
+      },
+      {
+        q: "Question 3\nThe compiled Python bytecode is stored in files which have their names ending with:",
+        answers: ["A) .pyc", "B) .py", "C) .pyb", "D) .pc"],
+        note: "Správná odpověď: .pyc",
+        correct: [0], multi: false
+      },
+      {
+        q: "Question 4\nAssuming that the following three files: a.py, b.py, and c.py reside in the same directory, what will be the output produced after running the c.py file?",
+        code: "# a.py\nprint(\"a\", end='')\n\n# b.py\nimport a\nprint(\"b\", end='')\n\n# c.py\nprint(\"c\", end='')\nimport a\nimport b",
+        answers: ["A) cab", "B) bc", "C) bac", "D) cba"],
+        note: "Správná odpověď: cab",
+        correct: [0], multi: false
+      },
+      {
+        q: "Question 5\nIf the following line of code is at the end of a Python script named calculator.py, what will be the output when the script is run directly?",
+        code: "print(__name__)",
+        note: "Správná odpověď: __main__. OPRAVA: Autor označil 'main', ale správně je '__main__' (s dvojitými podtržítky).",
+        answers: ["A) __calculator__", "B) calculator", "C) __main__", "D) main"],
+        correct: [2], multi: false
+      },
+      {
+        q: "Question 6\nConsider the following Python import statement in a script. What does this statement accomplish?",
+        code: "from data.processing.analysis.v1 import compute_metrics as cm",
+        answers: [
+          "A) Imports the compute_metrics function from the v1.py script, which is part of the analysis subpackage in the processing package inside the data package, and renames it to cm.",
+          "B) Imports v1 package and renames it to compute_metrics.",
+          "C) Imports data module from processing package and renames it to cm.",
+          "D) Imports whole data package and renames it to compute_metrics."
+        ],
+        note: "Správná odpověď: Imports the compute_metrics function from the v1.py script, which is part of the analysis subpackage in the processing package inside the data package, and renames it to cm.",
+        correct: [0], multi: false
+      },
+      {
+        q: "Question 7\nGiven the following Python code segment: If an exception is raised within risky_call(), how many except blocks can be executed?",
+        code: "try:\n    risky_call()\nexcept ValueError:\n    print(\"Caught ValueError\")\nexcept TypeError:\n    print(\"Caught TypeError\")\nexcept Exception:\n    print(\"Caught a different exception\")",
+        answers: [
+          "A) One or more except blocks will be executed.",
+          "B) Not more than one except block will be executed.",
+          "C) None of the except blocks will be executed.",
+          "D) Exactly one except block will be executed."
+        ],
+        note: "Správná odpověď: Exactly one except block will be executed.",
+        correct: [3], multi: false
+      },
+      {
+        q: "Question 8\nConsider the following Python code. What will be the output when this code is executed?",
+        code: "try:\n    raise Exception(\"An error occurred\")\nexcept ValueError as ve:\n    print(\"ValueError:\", str(ve))\nexcept BaseException as be:\n    print(\"BaseException:\", str(be))\nexcept:\n    print(\"Caught some other exception\")",
+        answers: [
+          "A) ValueError: An error occurred",
+          "B) BaseException: An error occurred",
+          "C) Caught some other exception",
+          "D) No output; an unhandled exception will terminate the program"
+        ],
+        note: "Správná odpověď: BaseException: An error occurred",
+        correct: [1], multi: false
+      },
+      {
+        q: "Question 9\nReview the Python code below. What will be the expected result when this code is executed?",
+        code: "try:\n    raise Exception(\"An error has occurred\")\nexcept Exception:\n    print(\"a\")\nexcept:\n    print(\"b\")\nexcept BaseException:\n    print(\"c\")",
+        note: "Správná odpověď: The code will cause a syntax error. OPRAVA: Autor označil 'print a', ale správně je 'syntax error'. bare except: nesmí být před except BaseException:.",
+        answers: [
+          "A) The code will print c",
+          "B) The code will print a",
+          "C) The code will print b",
+          "D) The code will cause a syntax error"
+        ],
+        correct: [3], multi: false
+      },
+      {
+        q: "Question 10\nAnalyze the Python statement below. Which of the following statements is correct about the code above?",
+        code: "with open('data.csv', 'r') as file:\n    for record in file:",
+        answers: [
+          "A) The code is valid because open(..., 'r') returns an iterable file object.",
+          "B) The code may be valid if record is predefined as a list.",
+          "C) The code is invalid because open(..., 'r') returns nothing.",
+          "D) The code is invalid because open(..., 'r') returns a non-iterable object."
+        ],
+        note: "Správná odpověď: The code is valid because the open function with 'r' mode returns an iterable file object.",
+        correct: [0], multi: false
+      },
+      {
+        q: "Question 11\nExamine the Python assertion statement provided. What is the behavior of this code segment?",
+        code: "assert var > 0",
+        answers: [
+          "A) Raises AssertionError if var <= 0.",
+          "B) Raises AssertionError if var > 0.",
+          "C) Does nothing regardless of var.",
+          "D) Outputs var if it is greater than 0."
+        ],
+        note: "Správná odpověď: It will raise an AssertionError if var is less than or equal to 0.",
+        correct: [0], multi: false
+      },
+      {
+        q: "Question 12\nGiven the Python code segment below, what is the expected behavior when this code is executed?",
+        code: "x = r\"\\\"\nprint(len(x))",
+        answers: [
+          "A) Prints 3.",
+          "B) Prints 1.",
+          "C) Causes a syntax error due to raw string ending with backslash.",
+          "D) Prints 4."
+        ],
+        note: "Správná odpověď: The code will cause a syntax error due to the unescaped sequence at the end of the raw string.",
+        correct: [2], multi: false
+      },
+      {
+        q: "Question 13\nGiven the Python code segment below, what will be the output when the code is executed?",
+        code: "x = \"\\\\//\"\nprint(len(x))",
+        answers: [
+          "A) 4",
+          "B) 3",
+          "C) 2",
+          "D) Syntax error"
+        ],
+        note: "Správná odpověď: The code will output 3, recognizing the sequence of two backslashes as a single escaped backslash and two forward slashes.",
+        correct: [1], multi: false
+      },
+      {
+        q: "Question 14\nConsider the Python code provided below. What will be the output of this code?",
+        code: "print(chr(ord('a') + 1))",
+        answers: [
+          "A) b",
+          "B) A",
+          "C) a",
+          "D) Syntax error"
+        ],
+        note: "Správná odpověď: The code will print 'b' as it takes the Unicode code point of 'a', adds 1, and converts it back to a character.",
+        correct: [0], multi: false
+      },
+      {
+        q: "Question 15\nConsider the following Python code snippet. What will be the output when this code is executed?",
+        code: "print(int(\"1.0\"))",
+        note: "Správná odpověď: The code will cause a ValueError because '1.0' is not a valid literal for the int() constructor without prior conversion to a float. OPRAVA: Autor označil 'print 1.0', ale správně je ValueError. int('1.0') vyhodí ValueError.",
+        answers: [
+          "A) Prints 1",
+          "B) Prints 1.0",
+          "C) Raises ValueError",
+          "D) Raises TypeError"
+        ],
+        correct: [2], multi: false
+      },
+      {
+        q: "Question 16\nIf the class constructor is declared in the following way, which one of the assignments is invalid?",
+        code: "class Class:\n    def __init__(self, val=0):\n        pass",
+        answers: [
+          "A) object = Class(1, 2)",
+          "B) object = Class(None)",
+          "C) object = Class(1)",
+          "D) object = Class()"
+        ],
+        note: "Správná odpověď: object = Class(1, 2)",
+        correct: [0], multi: false
+      },
+      {
+        q: "Question 17\nConsider the Python class CustomNumber and the subsequent operations performed on its instance. What will be the output when the code is executed?",
+        code: "class CustomNumber:\n    def __init__(self, value=1.5):\n        self.value = value\n    def increment(self, increase=2):\n        self.value -= increase\n        return self.value\n\nnum_instance = CustomNumber()\nnum_alias = num_instance\nnum_alias.increment()\nprint(num_instance.value)",
+        answers: ["A) 0.5", "B) -0.5", "C) 3.5", "D) TypeError"],
+        note: "Správná odpověď: -0.5",
+        correct: [1], multi: false
+      },
+      {
+        q: "Question 18\nWhat is the expected output of the following code?",
+        code: "class A:\n    A = 1\n    def __init__(self):\n        self.a = 0\n\nprint(hasattr(A, 'a'))",
+        answers: ["A) False", "B) True", "C) 0", "D) 1"],
+        note: "Správná odpověď: False",
+        correct: [0], multi: false
+      },
+      {
+        q: "Question 19\nWhat will the following Python code output?",
+        code: "class Parent:\n    pass\nclass Uncle(Parent):\n    pass\nclass Child(Uncle):\n    pass\nclass Cousin(Parent):\n    pass\n\nprint(issubclass(Child, Cousin), issubclass(Cousin, Uncle))",
+        answers: ["A) True, True", "B) True, False", "C) False, True", "D) False, False"],
+        note: "Správná odpověď: False, False",
+        correct: [3], multi: false
+      },
+      {
+        q: "Question 20\nWhat is the sys.stdout stream in Python typically associated with?",
+        answers: ["A) The screen", "B) The keyboard", "C) A null device", "D) The printer"],
+        note: "Správná odpověď: The screen",
+        correct: [0], multi: false
+      },
+      {
+        q: "Question 21\nWhat will be the result of running the following code?",
+        code: "class A:\n    def __init__(self, v):\n        self.__a = v + 1\n\nclass B(A):\n    def __init__(self, v):\n        super().__init__(v)\n        self.__a += 1\n\nb = B(0)\nprint(b._A__a)",
+        answers: ["A) 1", "B) 2", "C) 3", "D) AttributeError is raised"],
+        note: "Správná odpověď: AttributeError is raised",
+        correct: [3], multi: false
+      },
+      {
+        q: "Question 22\nWhat is the expected result of executing the following code?",
+        code: "class A:\n    def __init__(self):\n        pass\n\na = A(1)\nprint(hasattr(a, 'A'))",
+        answers: [
+          "A) The code will raise an exception",
+          "B) The code will print True",
+          "C) The code will print False",
+          "D) The code will print 1"
+        ],
+        note: "Správná odpověď: The code will raise an exception",
+        correct: [0], multi: false
+      },
+      {
+        q: "Question 23\nWhat is the expected result of executing the following code?",
+        code: "class A:\n    def a(self):\n        print('a')\n\nclass B:\n    def a(self):\n        print('b')\n\nclass C(B, A):\n    def c(self):\n        self.a()\n\no = C()\no.c()",
+        answers: [
+          "A) The code will print b",
+          "B) The code will print c",
+          "C) The code will print a",
+          "D) The code will raise an exception"
+        ],
+        note: "Správná odpověď: The code will print b",
+        correct: [0], multi: false
+      },
+      {
+        q: "Question 24\nWhat is the expected result of executing the following code?",
+        code: "try:\n    raise Exception(1, 2, 3, (4), 'A',)\nexcept Exception as e:\n    print(len(e.args))",
+        answers: ["A) 5", "B) 4", "C) 6", "D) An exception will be raised"],
+        note: "Správná odpověď: 5",
+        correct: [0], multi: false
+      },
+      {
+        q: "Question 25\nWhat is the expected result of executing the following code?",
+        code: "def my_fun(n):\n    s = '+'\n    for i in range(n):\n        s += s\n        yield s\n\nfor x in my_fun(2):\n    print(x, end='')",
+        answers: [
+          "A) The code will print ++++++",
+          "B) The code will print ++++",
+          "C) The code will print ++",
+          "D) The code will print +"
+        ],
+        note: "Správná odpověď: The code will print ++++++",
+        correct: [0], multi: false
+      },
+      {
+        q: "Question 26\nWhat is the expected result of executing the following code?",
+        code: "class I:\n    def __init__(self):\n        self.s = 'abc'\n        self.i = 0\n    def __iter__(self):\n        return self\n    def __next__(self):\n        if self.i == len(self.s):\n            raise StopIteration\n        v = self.s[self.i]\n        self.i += 1\n        return v\n\nfor x in I():\n    print(x, end='')",
+        answers: [
+          "A) The code will print abc",
+          "B) The code will print 012",
+          "C) The code will print cba",
+          "D) The code will print 210"
+        ],
+        note: "Správná odpověď: The code will print abc",
+        correct: [0], multi: false
+      },
+      {
+        q: "Question 27\nWhat will be the output of the following code?",
+        code: "def generate_pattern(n):\n    def create_pattern():\n        return '**' * n\n    return create_pattern\n\npattern1 = generate_pattern(1)\npattern2 = generate_pattern(2)\nprint(pattern1() * pattern2())",
+        note: "Správná odpověď: ******. POZOR: Ve skutečnosti pattern1()='**' a pattern2()='****' jsou oba stringy a str*str vyhodí TypeError. Pravděpodobná chyba v zadání.",
+        answers: ["A) **", "B) ***", "C) ****", "D) ******"],
+        correct: [3], multi: false
+      },
+      {
+        q: "Question 28\nIf s is a stream opened in read mode, what does the following line of code do?",
+        code: "q = s.read(-1)",
+        answers: [
+          "A) It reads the entire contents of the stream s.",
+          "B) It reads nothing from the stream s.",
+          "C) It reads one character from the stream s.",
+          "D) It raises an error because a negative value is provided."
+        ],
+        note: "Správná odpověď: It reads the entire contents of the stream s.",
+        correct: [0], multi: false
+      },
+      {
+        q: "Question 29\nAssuming that the open() invocation has gone successfully, the following snippet will:",
+        code: "for x in open('file', 'rt'):\n    print(x)",
+        answers: [
+          "A) read the file line by line",
+          "B) read the file character by character",
+          "C) read the whole file at once",
+          "D) cause an exception"
+        ],
+        note: "Správná odpověď: read the file line by line",
+        correct: [0], multi: false
+      },
+      {
+        q: "Question 30\nIf you want to fill a byte array with data read in from a stream, which method can you use?",
+        answers: ["A) readinto()", "B) readbytes()", "C) readfrom()", "D) read()"],
+        note: "Správná odpověď: The readinto() method",
+        correct: [0], multi: false
+      },
+      {
+        q: "Question 31\nWhich of the following commands would you use to check pip's version? (Select two answers)",
+        answers: ["A) pip --version", "B) pip3 --version", "C) pip version", "D) pip-version"],
+        note: "Správná odpověď: pip --version a pip3 --version",
+        correct: [0, 1], multi: true
+      },
+      {
+        q: "Question 32\nWhich of the following commands can be used with pip to uninstall a specific Python package?",
+        answers: [
+          "A) pip uninstall package_name",
+          "B) pip erase package_name",
+          "C) pip delete package_name",
+          "D) pip --remove package_name"
+        ],
+        note: "Správná odpověď: pip uninstall package_name",
+        correct: [0], multi: false
+      },
+      {
+        q: "Question 33\nLook at the following code. Which line would you insert in order for the program to produce the expected output?",
+        code: "numbers = [0, 2, 7, 9, 10]\n# Insert line of code here.\nprint(list(foo))",
+        answers: [
+          "A) foo = map(lambda num: num ** 2, numbers)",
+          "B) foo = filter(lambda num: num ** 2, numbers)",
+          "C) foo = lambda num: num ** 2, numbers",
+          "D) foo = lambda num: num * 2, numbers"
+        ],
+        note: "Expected output: [0, 4, 49, 81, 100]. Správná odpověď: foo = map(lambda num: num ** 2, numbers)",
+        correct: [0], multi: false
+      },
+      {
+        q: "Question 34\nLook at the following code. Which line would you insert in order for the program to produce the expected output?",
+        code: "numbers = [i*i for i in range(5)]\n# Insert line of code here.\nprint(foo)",
+        answers: [
+          "A) foo = list(filter(lambda x: x % 2, numbers))",
+          "B) foo = list(map(lambda x: x % 2, numbers))",
+          "C) foo = list(filter(lambda x: x / 2, numbers))",
+          "D) foo = list(map(lambda x: x // 2, numbers))"
+        ],
+        note: "Expected output: [1, 9]. Správná odpověď: foo = list(filter(lambda x: x % 2, numbers))",
+        correct: [0], multi: false
+      },
+      {
+        q: "Question 35\nLook at the code below: Which lines of code would you insert so that it is possible for the program to output the following result: 6 82 0",
+        code: "import random\n\n#\n# Insert lines of code here.\n#\n\nprint(a, b, c)",
+        answers: [
+          "A) a = random.randrange(10, 100, 3)\\nb = random.randint(0, 100)\\nc = random.choice((0, 100, 3))",
+          "B) a = random.choice((0, 100, 3))\\nb = random.randrange(10, 100, 3)\\nc = random.randint(0, 100)",
+          "C) a = random.randint(0, 100)\\nb = random.randrange(10, 100, 3)\\nc = random.choice((0, 100, 3))",
+          "D) a = random.randint(0, 100)\\nb = random.choice((0, 100, 3))\\nc = random.randrange(10, 100, 3)"
+        ],
+        correct: [2], multi: false
+      },
+      {
+        q: "Question 36\nWhat is the expected result of the following code?",
+        code: "import os\n\nos.mkdir('pictures')\nos.chdir('pictures')\n\nprint(os.getcwd())",
+        answers: [
+          "A) The code will print the path to the created directory",
+          "B) The code will print the name of the created directory",
+          "C) The code will print the content of the created directory",
+          "D) The code will print the owner of the created directory"
+        ],
+        correct: [0], multi: false
+      },
+      {
+        q: "Question 37\nWhat information can be read using the uname function provided by the os module? (Select two answers)",
+        answers: [
+          "A) Operating system name",
+          "B) Hardware identifier",
+          "C) Last login date",
+          "D) Current path"
+        ],
+        correct: [0, 1], multi: true
+      },
+      {
+        q: "Question 38\nWhat is the expected result of the following code?",
+        code: "from datetime import datetime\n\ndatetime_1 = datetime(2019, 11, 27, 11, 27, 22)\ndatetime_2 = datetime(2019, 11, 27, 0, 0, 0)\n\nprint(datetime_1 - datetime_2)",
+        answers: [
+          "A) 11:27:22",
+          "B) 0 days, 11:27:22",
+          "C) 11 hours, 27 minutes, 22 seconds",
+          "D) 0 days"
+        ],
+        correct: [0], multi: false
+      },
+      {
+        q: "Question 39\nIf you want to calculate the date that is 30 days after the current date, which of the following code snippets would you use?",
+        answers: [
+          "A) current_date + timedelta(days=30)",
+          "B) current_date + timedelta(days==30)",
+          "C) current_date + timedelta(30)",
+          "D) current_date + timedelta(-30)"
+        ],
+        correct: [0], multi: false
+      },
+      {
+        q: "Question 40: What is the expected result of executing the following Python code?",
+        code: "import calendar\n\ncalendar.setfirstweekday(calendar.FRIDAY)\nprint(calendar.weekheader(2))",
+        answers: [
+          "A) It will only print the names of the first two days of the week starting with Friday.",
+          "B) It will only print the names of the days of the week from Friday to Sunday.",
+          "C) It will raise an error because calendar.weekheader() does not accept arguments.",
+          "D) It will print the names of all the days of the week in a shorter format."
+        ],
+        correct: [3], multi: false
+      }
+    ]
+  }
+};
+
+// State
+let currentQuiz = null;
+let currentQuizId = null;
+let currentShuffled = false;
+let currentIndex = 0;
+let correctTotal = 0;
+let wrongTotal = 0;
+let answered = 0;
+let questionState = []; // per-question: { answered: bool, correct: bool, selected: Set, revealed: bool, showAnswerInfo: bool }
+let multiSelections = {};
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function shuffleArray(items) {
+  for (let i = items.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+}
+
+function startQuiz(quizId, shuffleQuestions = false) {
+  const data = quizData[quizId];
+  if (!data) return;
+  const questions = data.questions.map(q => ({
+    ...q,
+    answers: Array.isArray(q.answers) ? [...q.answers] : [],
+    correct: Array.isArray(q.correct) ? [...q.correct] : []
+  }));
+  if (shuffleQuestions) shuffleArray(questions);
+
+  currentQuiz = {
+    title: data.title,
+    questions
+  };
+  currentQuizId = quizId;
+  currentShuffled = shuffleQuestions;
+  currentIndex = 0;
+  correctTotal = 0;
+  wrongTotal = 0;
+  answered = 0;
+  multiSelections = {};
+  questionState = data.questions.map(() => ({ answered: false, correct: false, selected: new Set(), revealed: false, showAnswerInfo: false }));
+
+  document.getElementById('quizTitle').textContent = data.title;
+  document.getElementById('menuView').style.display = 'none';
+  document.getElementById('resultsView').style.display = 'none';
+  document.getElementById('quizView').style.display = 'block';
+
+  buildDots();
+  updateScore();
+  showQuestion(0);
+}
+
+function backToMenu() {
+  document.getElementById('quizView').style.display = 'none';
+  document.getElementById('resultsView').style.display = 'none';
+  document.getElementById('menuView').style.display = 'flex';
+  currentQuiz = null;
+}
+
+function buildDots() {
+  const container = document.getElementById('navDots');
+  container.innerHTML = '';
+  currentQuiz.questions.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot';
+    d.title = 'Otázka ' + (i + 1);
+    d.addEventListener('click', () => showQuestion(i));
+    container.appendChild(d);
+  });
+}
+
+function updateDots() {
+  const dots = document.querySelectorAll('#navDots .dot');
+  dots.forEach((d, i) => {
+    d.className = 'dot';
+    if (i === currentIndex) d.classList.add('current');
+    if (questionState[i].answered) {
+      d.classList.add(questionState[i].correct ? 'answered-ok' : 'answered-fail');
+    }
+  });
+}
+
+function updateScore() {
+  document.getElementById('correctCount').textContent = correctTotal;
+  document.getElementById('wrongCount').textContent = wrongTotal;
+  document.getElementById('remainCount').textContent = currentQuiz.questions.length - answered;
+}
+
+function showQuestion(index) {
+  currentIndex = index;
+  const q = currentQuiz.questions[index];
+  const state = questionState[index];
+  const total = currentQuiz.questions.length;
+
+  let html = `<div class="question-block">`;
+  html += `<div class="q-header">Otázka ${index + 1} / ${total}</div>`;
+  html += `<div class="q-text">${escapeHtml(q.q)}</div>`;
+  if (q.code) html += `<div class="q-code">${escapeHtml(q.code)}</div>`;
+  const hasAnswerInfo = !!q.note || (Array.isArray(q.correct) && q.correct.length > 0);
+  if (hasAnswerInfo) {
+    const answerLetters = q.correct.map(i => String.fromCharCode(65 + i)).join(', ');
+    html += `<div class="answer-reveal-wrap"><button class="btn btn-back" id="toggleAnswerInfoBtn">${state.showAnswerInfo ? 'Skrýt odpověď' : 'Zobrazit odpověď'}</button></div>`;
+    if (state.showAnswerInfo) {
+      let infoHtml = `<div><strong>Správná možnost:</strong> ${escapeHtml(answerLetters)}</div>`;
+      if (q.note) infoHtml += `<div style="margin-top:6px;">${escapeHtml(q.note)}</div>`;
+      html += `<div class="answer-note-box">${infoHtml}</div>`;
+    }
+  }
+  if (q.multi && !state.revealed) html += `<div class="multi-note">⚠ Vyber více odpovědí a pak klikni "Potvrdit"</div>`;
+  html += `<div class="answers">`;
+
+  q.answers.forEach((a, ai) => {
+    const displayText = a.replace(/\\n/g, '\n');
+    let cls = 'answer-btn';
+    if (state.revealed) {
+      cls += ' disabled';
+      if (q.correct.includes(ai)) cls += ' correct show-correct';
+      if (state.selected.has(ai) && !q.correct.includes(ai)) cls += ' wrong';
+      if (state.selected.has(ai) && q.correct.includes(ai)) cls += ' correct';
+    } else if (q.multi && state.selected.has(ai)) {
+      cls += ' multi-selected';
+    }
+    html += `<button class="${cls}" data-a="${ai}">${escapeHtml(displayText)}</button>`;
+  });
+
+  html += `</div>`;
+
+  if (q.multi && !state.revealed) {
+    const disabled = state.selected.size === 0 ? ' disabled' : '';
+    html += `<div style="margin-top:12px;"><button class="btn btn-submit" id="confirmMultiBtn"${disabled}>Potvrdit výběr</button></div>`;
+  }
+
+  if (state.revealed) {
+    html += `<div class="result-msg ${state.correct ? 'ok' : 'fail'}">${state.correct ? '✅ Správně!' : '❌ Špatně!'}</div>`;
+  }
+
+  html += `</div>`;
+
+  document.getElementById('questionArea').innerHTML = html;
+
+  // Attach handlers
+  if (!state.revealed) {
+    document.querySelectorAll('#questionArea .answer-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const ai = parseInt(this.dataset.a);
+        if (q.multi) {
+          if (state.selected.has(ai)) {
+            state.selected.delete(ai);
+          } else {
+            state.selected.add(ai);
+          }
+          showQuestion(index);
+        } else {
+          state.selected = new Set([ai]);
+          revealAnswer(index);
+        }
+      });
+    });
+
+    if (q.multi) {
+      const confirmBtn = document.getElementById('confirmMultiBtn');
+      if (confirmBtn) {
+        confirmBtn.addEventListener('click', () => {
+          if (state.selected.size > 0) revealAnswer(index);
+        });
+      }
+    }
+  }
+
+  const toggleAnswerInfoBtn = document.getElementById('toggleAnswerInfoBtn');
+  if (toggleAnswerInfoBtn) {
+    toggleAnswerInfoBtn.addEventListener('click', () => {
+      state.showAnswerInfo = !state.showAnswerInfo;
+      showQuestion(index);
+    });
+  }
+
+  updateDots();
+}
+
+function revealAnswer(qi) {
+  const q = currentQuiz.questions[qi];
+  const state = questionState[qi];
+  if (state.revealed) return;
+
+  const correctSet = new Set(q.correct);
+  const isCorrect = state.selected.size === correctSet.size && [...state.selected].every(v => correctSet.has(v));
+
+  state.revealed = true;
+  state.answered = true;
+  state.correct = isCorrect;
+
+  if (isCorrect) correctTotal++; else wrongTotal++;
+  answered++;
+  updateScore();
+  showQuestion(qi); // re-render with revealed state
+
+  // Auto-advance after a short delay
+  const total = currentQuiz.questions.length;
+  setTimeout(() => {
+    if (answered >= total) {
+      showResults();
+    } else {
+      // Find next unanswered question, or just go to next
+      let next = qi + 1;
+      if (next >= total) next = questionState.findIndex(s => !s.answered);
+      if (next >= 0 && next < total) showQuestion(next);
+    }
+  }, 1200);
+}
+
+function showResults() {
+  document.getElementById('quizView').style.display = 'none';
+  document.getElementById('resultsView').style.display = 'block';
+  const total = currentQuiz.questions.length;
+  const pct = Math.round((correctTotal / total) * 100);
+  const pass = pct >= 70;
+  document.getElementById('finalScore').textContent = `${correctTotal} / ${total} (${pct}%)`;
+  document.getElementById('finalScore').className = 'big-score ' + (pass ? 'pass' : 'nopass');
+  document.getElementById('finalMsg').textContent = pass ? 'Gratuluju, test splněn! 🎉' : 'Bohužel nesplněno, zkus to znova!';
+  document.getElementById('restartBtn').onclick = () => startQuiz(currentQuizId, currentShuffled);
+}
+</script>
+</body>
+</html>
