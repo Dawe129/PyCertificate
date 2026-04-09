@@ -390,9 +390,9 @@ const quizData = {
         code: "from data.processing.analysis.v1 import compute_metrics as cm",
         answers: [
           "A) Imports the compute_metrics function from the v1.py script, which is part of the analysis subpackage in the processing package inside the data package, and renames it to cm.",
-          "B) Imports v1 package and renames it to compute_metrics.",
-          "C) Imports data module from processing package and renames it to cm.",
-          "D) Imports whole data package and renames it to compute_metrics."
+          "B) Imports the v1 package from the analysis submodule, which is part of the processing function inside the data module, and renames it to compute_metrics.",
+          "C) Imports the data module from the processing package, which is part of the analysis subpackage inside the v1 package, and renames it to cm.",
+          "D) Imports the entire data package and renames it to compute_metrics, allowing all functions and classes within to be accessed using the prefix cm."
         ],
         note: "Správná odpověď: Imports the compute_metrics function from the v1.py script, which is part of the analysis subpackage in the processing package inside the data package, and renames it to cm.",
         correct: [0], multi: false
@@ -437,10 +437,10 @@ const quizData = {
         q: "Question 10\nAnalyze the Python statement below. Which of the following statements is correct about the code above?",
         code: "with open('data.csv', 'r') as file:\n    for record in file:",
         answers: [
-          "A) The code is valid because open(..., 'r') returns an iterable file object.",
+          "A) The code is valid because the open function with 'r' mode returns an iterable file object.",
           "B) The code may be valid if record is predefined as a list.",
-          "C) The code is invalid because open(..., 'r') returns nothing.",
-          "D) The code is invalid because open(..., 'r') returns a non-iterable object."
+          "C) The code is invalid because the open function with 'r' mode returns nothing.",
+          "D) The code is invalid because the open function with 'r' mode returns a non-iterable object."
         ],
         note: "Správná odpověď: The code is valid because the open function with 'r' mode returns an iterable file object.",
         correct: [0], multi: false
@@ -449,10 +449,10 @@ const quizData = {
         q: "Question 11\nExamine the Python assertion statement provided. What is the behavior of this code segment?",
         code: "assert var > 0",
         answers: [
-          "A) Raises AssertionError if var <= 0.",
-          "B) Raises AssertionError if var > 0.",
-          "C) Does nothing regardless of var.",
-          "D) Outputs var if it is greater than 0."
+          "A) It will raise an AssertionError if var is less than or equal to 0.",
+          "B) It will raise an AssertionError if var is greater than 0.",
+          "C) It will do nothing regardless of the value of var.",
+          "D) It will output the value of var if it is greater than 0."
         ],
         note: "Správná odpověď: It will raise an AssertionError if var is less than or equal to 0.",
         correct: [0], multi: false
@@ -461,10 +461,10 @@ const quizData = {
         q: "Question 12\nGiven the Python code segment below, what is the expected behavior when this code is executed?",
         code: "x = r\"\\\"\nprint(len(x))",
         answers: [
-          "A) Prints 3.",
-          "B) Prints 1.",
-          "C) Causes a syntax error due to raw string ending with backslash.",
-          "D) Prints 4."
+          "A) The code will print 3, as the raw string treats backslashes as literal characters.",
+          "B) The code will print 1, as the triple backslash in a raw string represents a single backslash.",
+          "C) The code will cause a syntax error due to the unescaped sequence at the end of the raw string.",
+          "D) The code will print 4, as the raw string preserves the backslashes and the ending double quote is considered part of the string."
         ],
         note: "Správná odpověď: The code will cause a syntax error due to the unescaped sequence at the end of the raw string.",
         correct: [2], multi: false
@@ -473,10 +473,10 @@ const quizData = {
         q: "Question 13\nGiven the Python code segment below, what will be the output when the code is executed?",
         code: "x = \"\\\\//\"\nprint(len(x))",
         answers: [
-          "A) 4",
-          "B) 3",
-          "C) 2",
-          "D) Syntax error"
+          "A) The code will output 4, as there are four characters in the string, with the backslash escaping the following forward slash.",
+          "B) The code will output 3, recognizing the sequence of two backslashes as a single escaped backslash and two forward slashes.",
+          "C) The code will output 2, as the double backslash represents a single backslash and the double forward slashes are combined.",
+          "D) The code will cause a syntax error due to an improper sequence of escape characters."
         ],
         note: "Správná odpověď: The code will output 3, recognizing the sequence of two backslashes as a single escaped backslash and two forward slashes.",
         correct: [1], multi: false
@@ -485,10 +485,10 @@ const quizData = {
         q: "Question 14\nConsider the Python code provided below. What will be the output of this code?",
         code: "print(chr(ord('a') + 1))",
         answers: [
-          "A) b",
-          "B) A",
-          "C) a",
-          "D) Syntax error"
+          "A) The code will print \"b\" as it takes the Unicode code point of 'a', adds 1, and converts it back to a character.",
+          "B) The code will print \"A\" because the addition operation converts the lowercase 'a' to an uppercase 'A' without changing its position in the alphabet.",
+          "C) The code will print \"a\" because the addition operation does not affect the character.",
+          "D) The code will cause a syntax error because you cannot add a number to a character's ord() value."
         ],
         note: "Správná odpověď: The code will print 'b' as it takes the Unicode code point of 'a', adds 1, and converts it back to a character.",
         correct: [0], multi: false
@@ -498,10 +498,10 @@ const quizData = {
         code: "print(int(\"1.0\"))",
         note: "Správná odpověď: The code will cause a ValueError because '1.0' is not a valid literal for the int() constructor without prior conversion to a float. OPRAVA: Autor označil 'print 1.0', ale správně je ValueError. int('1.0') vyhodí ValueError.",
         answers: [
-          "A) Prints 1",
-          "B) Prints 1.0",
-          "C) Raises ValueError",
-          "D) Raises TypeError"
+          "A) The code will print 1 because it converts the string \"1.0\" to an integer.",
+          "B) The code will print 1.0 as it maintains the floating-point format.",
+          "C) The code will cause a ValueError because \"1.0\" is not a valid literal for the int() constructor without prior conversion to a float.",
+          "D) The code will cause a TypeError because strings cannot be converted to integers directly when they represent a float."
         ],
         correct: [2], multi: false
       },
@@ -520,7 +520,7 @@ const quizData = {
       {
         q: "Question 17\nConsider the Python class CustomNumber and the subsequent operations performed on its instance. What will be the output when the code is executed?",
         code: "class CustomNumber:\n    def __init__(self, value=1.5):\n        self.value = value\n    def increment(self, increase=2):\n        self.value -= increase\n        return self.value\n\nnum_instance = CustomNumber()\nnum_alias = num_instance\nnum_alias.increment()\nprint(num_instance.value)",
-        answers: ["A) 0.5", "B) -0.5", "C) 3.5", "D) TypeError"],
+        answers: ["A) 0.5", "B) -0.5", "C) 3.5", "D) A TypeError is raised."],
         note: "Správná odpověď: -0.5",
         correct: [1], multi: false
       },
@@ -639,7 +639,7 @@ const quizData = {
       },
       {
         q: "Question 30\nIf you want to fill a byte array with data read in from a stream, which method can you use?",
-        answers: ["A) readinto()", "B) readbytes()", "C) readfrom()", "D) read()"],
+        answers: ["A) The readinto() method", "B) The readbytes() method", "C) The readfrom() method", "D) The read() method"],
         note: "Správná odpověď: The readinto() method",
         correct: [0], multi: false
       },
